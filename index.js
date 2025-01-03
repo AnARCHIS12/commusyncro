@@ -1,4 +1,5 @@
 const { Client, GatewayIntentBits, Partials, PermissionsBitField, REST, Routes, SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { initDatabase, addSyncedChannel, getSyncedChannels, addServerTunnel, getServerTunnels, removeSyncedChannel } = require('./database');
 require('dotenv').config();
 
 const client = new Client({
@@ -18,10 +19,10 @@ const POING = '✊';
 const DRAPEAU = '🚩';
 const MONDE = '🌍';
 
-// Map pour stocker les salons synchronisés
-const syncedChannels = new Map();
-// Map pour stocker les tunnels entre serveurs
-const serverTunnels = new Map();
+// Map pour stocker les salons synchronisés (chargée depuis la base de données)
+let syncedChannels = new Map();
+// Map pour stocker les tunnels entre serveurs (chargée depuis la base de données)
+let serverTunnels = new Map();
 
 // Définition des commandes slash
 const commands = [
@@ -32,6 +33,10 @@ const commands = [
     new SlashCommandBuilder()
         .setName('linkchannel')
         .setDescription(`${POING} Établit une alliance avec un salon déjà unifié`)
+        .addStringOption(option =>
+            option.setName('groupid')
+            .setDescription('ID du groupe à rejoindre')
+            .setRequired(true))
         .toJSON(),
     new SlashCommandBuilder()
         .setName('createtunnel')
@@ -46,8 +51,8 @@ const commands = [
         .setDescription(`${DRAPEAU} Affiche les passages de l'Union`)
         .toJSON(),
     new SlashCommandBuilder()
-        .setName('createlink')
-        .setDescription('Crée un lien d\'invitation unique vers le serveur')
+        .setName('unsync')
+        .setDescription(`${POING} Retire ce salon de l'Union`)
         .toJSON()
 ];
 
@@ -58,6 +63,12 @@ client.once('ready', async () => {
     console.log(`${MARTEAU_FAUCILLE} Le Parti est prêt à servir en tant que ${client.user.tag}`);
     
     try {
+        // Initialisation de la base de données
+        await initDatabase();
+        
+        // Chargement des données depuis la base de données
+        syncedChannels = await getSyncedChannels();
+        
         console.log('Préparation de la révolution...');
         await rest.put(
             Routes.applicationCommands(client.user.id),
@@ -84,20 +95,30 @@ client.on('interactionCreate', async interaction => {
         }
 
         const channelId = interaction.channelId;
-        if (!syncedChannels.has(channelId)) {
-            syncedChannels.set(channelId, new Set([channelId]));
+        const groupId = Date.now().toString(); // Identifiant unique pour le groupe
+
+        try {
+            await addSyncedChannel(channelId, groupId);
+            
+            if (!syncedChannels.has(groupId)) {
+                syncedChannels.set(groupId, new Set([channelId]));
+            } else {
+                syncedChannels.get(groupId).add(channelId);
+            }
+
             const embed = new EmbedBuilder()
                 .setColor(ROUGE_COMMUNISTE)
                 .setTitle(`${MARTEAU_FAUCILLE} Unification Réussie !`)
-                .setDescription('Ce salon rejoint la grande union des serveurs !')
+                .setDescription(`Ce salon rejoint la grande union des serveurs !\nID du groupe: ${groupId}`)
                 .setFooter({ 
                     text: 'Pour le peuple, par le peuple !',
                     iconURL: interaction.user.displayAvatarURL()
                 });
             await interaction.reply({ embeds: [embed] });
-        } else {
+        } catch (error) {
+            console.error('Erreur lors de la synchronisation:', error);
             await interaction.reply({ 
-                content: `${DRAPEAU} Ce salon fait déjà partie de l'Union, camarade !`,
+                content: `${POING} Une erreur est survenue lors de l'unification.`,
                 ephemeral: true 
             });
         }
@@ -111,31 +132,58 @@ client.on('interactionCreate', async interaction => {
             });
         }
 
-        const targetChannelId = interaction.channelId;
-        let found = false;
-        
-        for (const [sourceId, channels] of syncedChannels.entries()) {
-            if (channels.has(targetChannelId)) {
-                await interaction.reply({ 
-                    content: `${DRAPEAU} Ce salon est déjà synchronisé.`,
-                    ephemeral: true 
-                });
-                found = true;
-                break;
+        const channelId = interaction.channelId;
+        const groupId = interaction.options.getString('groupid');
+
+        try {
+            await addSyncedChannel(channelId, groupId);
+            
+            if (!syncedChannels.has(groupId)) {
+                syncedChannels.set(groupId, new Set([channelId]));
+            } else {
+                syncedChannels.get(groupId).add(channelId);
             }
+
+            await interaction.reply(`${POING} Salon lié avec succès au groupe ${groupId} !`);
+        } catch (error) {
+            console.error('Erreur lors de la liaison:', error);
+            await interaction.reply({ 
+                content: `${POING} Une erreur est survenue lors de la liaison.`,
+                ephemeral: true 
+            });
+        }
+    }
+
+    else if (commandName === 'unsync') {
+        if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+            return interaction.reply({ 
+                content: `${POING} Seuls les commissaires du peuple peuvent utiliser cette commande, camarade.`,
+                ephemeral: true 
+            });
         }
 
-        if (!found) {
-            const firstGroup = syncedChannels.values().next().value;
-            if (firstGroup) {
-                firstGroup.add(targetChannelId);
-                await interaction.reply(`${POING} Salon lié avec succès !`);
-            } else {
-                await interaction.reply({ 
-                    content: `${MARTEAU_FAUCILLE} Aucun salon source n'a été configuré. Utilisez d'abord /sync dans le salon source.`,
-                    ephemeral: true 
-                });
+        const channelId = interaction.channelId;
+        try {
+            await removeSyncedChannel(channelId);
+            
+            // Retirer le salon de la Map en mémoire
+            for (const [groupId, channels] of syncedChannels.entries()) {
+                if (channels.has(channelId)) {
+                    channels.delete(channelId);
+                    if (channels.size === 0) {
+                        syncedChannels.delete(groupId);
+                    }
+                    break;
+                }
             }
+
+            await interaction.reply(`${DRAPEAU} Ce salon a quitté l'Union.`);
+        } catch (error) {
+            console.error('Erreur lors de la désynchronisation:', error);
+            await interaction.reply({ 
+                content: `${POING} Une erreur est survenue lors de la désynchronisation.`,
+                ephemeral: true 
+            });
         }
     }
 
@@ -156,10 +204,11 @@ client.on('interactionCreate', async interaction => {
                 reason: `Passage révolutionnaire créé par le camarade ${interaction.user.tag}`
             });
 
+            await addServerTunnel(interaction.guildId, description, invite.url);
+            
             if (!serverTunnels.has(interaction.guildId)) {
                 serverTunnels.set(interaction.guildId, new Map());
             }
-            
             const serverTunnelMap = serverTunnels.get(interaction.guildId);
             serverTunnelMap.set(description, invite.url);
 
@@ -192,7 +241,7 @@ client.on('interactionCreate', async interaction => {
     }
 
     else if (commandName === 'tunnels') {
-        const serverTunnelMap = serverTunnels.get(interaction.guildId);
+        const serverTunnelMap = await getServerTunnels(interaction.guildId);
         if (!serverTunnelMap || serverTunnelMap.size === 0) {
             return interaction.reply({ 
                 content: `${POING} Aucun passage n'a encore été établi pour nos camarades.`,
@@ -220,27 +269,6 @@ client.on('interactionCreate', async interaction => {
 
         await interaction.reply({ embeds: [embed], ephemeral: true });
     }
-
-    else if (commandName === 'createlink') {
-        try {
-            const invite = await interaction.channel.createInvite({
-                maxAge: 86400,
-                maxUses: 1,
-                unique: true
-            });
-            await interaction.user.send(`Voici votre lien d'invitation unique : ${invite.url}`);
-            await interaction.reply({ 
-                content: `${POING} Je vous ai envoyé le lien en message privé !`,
-                ephemeral: true 
-            });
-        } catch (error) {
-            console.error('Erreur lors de la création du lien :', error);
-            await interaction.reply({ 
-                content: `${POING} Une erreur est survenue lors de la création du lien.`,
-                ephemeral: true 
-            });
-        }
-    }
 });
 
 // Synchronisation des messages
@@ -248,14 +276,30 @@ client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
 
     const channelId = message.channel.id;
-    for (const [sourceId, channels] of syncedChannels.entries()) {
+    let found = false;
+
+    for (const [groupId, channels] of syncedChannels.entries()) {
         if (channels.has(channelId)) {
+            found = true;
             for (const targetChannelId of channels) {
                 if (targetChannelId !== channelId) {
                     const targetChannel = client.channels.cache.get(targetChannelId);
                     if (targetChannel) {
                         try {
-                            await targetChannel.send(`${MARTEAU_FAUCILLE} **Camarade ${message.author.tag}**: ${message.content}`);
+                            const embed = new EmbedBuilder()
+                                .setColor(ROUGE_COMMUNISTE)
+                                .setAuthor({
+                                    name: message.author.tag,
+                                    iconURL: message.author.displayAvatarURL()
+                                })
+                                .setDescription(message.content)
+                                .setTimestamp();
+
+                            if (message.attachments.size > 0) {
+                                embed.setImage(message.attachments.first().url);
+                            }
+
+                            await targetChannel.send({ embeds: [embed] });
                         } catch (error) {
                             console.error('Erreur lors de la diffusion du message :', error);
                         }
