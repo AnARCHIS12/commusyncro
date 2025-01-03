@@ -56,12 +56,26 @@ Pour une installation détaillée, consultez le [Guide d'Installation](docs/inst
 
 | Commande | Description | Documentation |
 |----------|-------------|---------------|
-| `/sync` | Synchronise un salon | [En savoir plus](docs/commandes.md#sync) |
-| `/linkchannel` | Connecte deux salons | [En savoir plus](docs/commandes.md#linkchannel) |
-| `/createtunnel` | Crée un tunnel permanent | [En savoir plus](docs/commandes.md#createtunnel) |
-| `/tunnels` | Liste les tunnels actifs | [En savoir plus](docs/commandes.md#tunnels) |
+| `/sync` | Synchronise un salon avec un groupe | [En savoir plus](docs/commandes.md#sync) |
+| `/unsync` | Retire un salon du réseau | [En savoir plus](docs/commandes.md#unsync) |
+| `/createtunnel` | Crée un portail vers un autre serveur | [En savoir plus](docs/commandes.md#createtunnel) |
 
-Pour la liste complète des commandes, consultez le [Guide des Commandes](docs/commandes.md).
+### 🌟 Portails Révolutionnaires
+
+Les portails permettent de créer des passages permanents entre serveurs :
+
+- Créez un portail depuis n'importe quel salon
+- Interface intuitive avec boutons
+- Invitations uniques pour chaque utilisation
+- Plusieurs portails par salon possible
+- Messages synchronisés entre groupes de serveurs
+
+### 🔐 Sécurité et Permissions
+
+- Vérification des permissions administrateur
+- Invitations uniques et temporaires
+- Contrôle total sur les salons liés
+- Système de groupes pour la synchronisation
 
 ## 🛠️ Configuration
 
