@@ -4,7 +4,7 @@
 
 <img src="assets/logo.svg" alt="Logo CommuSyncro" width="200" height="200"/>
 
-[![Discord](https://img.shields.io/discord/YOUR_DISCORD_ID?color=7289DA&logo=discord&logoColor=white)](https://discord.gg/your-invite)
+[![Discord](https://img.shields.io/discord/EBMCgDZrGa?color=7289DA&logo=discord&logoColor=white)](https://discord.gg/EBMCgDZrGa)
 [![GitHub license](https://img.shields.io/github/license/AnARCHIS12/commusyncro)](https://github.com/AnARCHIS12/commusyncro/blob/main/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/AnARCHIS12/commusyncro)](https://github.com/AnARCHIS12/commusyncro/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/AnARCHIS12/commusyncro)](https://github.com/AnARCHIS12/commusyncro/issues)
@@ -88,7 +88,7 @@ Consultez notre [Guide de Contribution](docs/contribution.md) pour plus de déta
 ## 💬 Support
 
 - [Documentation Complète](docs/)
-- [Serveur Discord](https://discord.gg/your-invite)
+- [Serveur Discord](https://discord.gg/EBMCgDZrGa)
 - [FAQ](https://github.com/AnARCHIS12/commusyncro/wiki/FAQ)
 
 ### Signalement de bugs
