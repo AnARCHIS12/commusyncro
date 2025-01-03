@@ -1,6 +1,8 @@
-const { Client, GatewayIntentBits, Partials, PermissionsBitField, REST, Routes, SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType } = require('discord.js');
+const { Client, GatewayIntentBits, Partials, PermissionsBitField, REST, Routes, SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, ActivityType, AttachmentBuilder } = require('discord.js');
 const { initDatabase, addSyncedChannel, getSyncedChannels, addServerTunnel, getServerTunnels, removeSyncedChannel, createPortal, getPortal, linkPortal, ServerTunnel, Sequelize, getActivePortals, getChannelGroup, SyncedChannel, deactivatePortal } = require('./database');
 require('dotenv').config();
+const axios = require('axios');
+const { Buffer } = require('buffer');
 
 const client = new Client({
     intents: [
@@ -76,6 +78,9 @@ client.once('ready', async () => {
             console.error('Erreur lors de l\'initialisation de la base de données. Le bot ne peut pas démarrer.');
             process.exit(1);
         }
+
+        // Nettoyer les canaux invalides au démarrage
+        await cleanInvalidChannels(client);
 
         // Enregistrer les commandes globalement
         await rest.put(
@@ -313,76 +318,184 @@ async function createPortalMessage(portal, guild, channel) {
     return { embeds: [embed], components: [row] };
 }
 
+// Extraire l'ID du GIF Tenor
+function getTenorId(url) {
+    // Format: https://tenor.com/view/something-something-number
+    const matches = url.match(/\/view\/[^-]+-(\d+)/);
+    return matches ? matches[1] : null;
+}
+
+// Obtenir l'URL directe du GIF
+async function getTenorGifUrl(url) {
+    try {
+        const response = await axios.get(url);
+        const html = response.data;
+        const match = html.match(/"contentUrl":\s*"([^"]+)"/);
+        return match ? match[1] : null;
+    } catch (error) {
+        console.error('Erreur lors de la récupération du GIF:', error);
+        return null;
+    }
+}
+
+// Cache pour les webhooks
+const webhookCache = new Map();
+
+// Obtenir ou créer un webhook pour un canal
+async function getWebhookForChannel(channel) {
+    // Vérifier le cache
+    if (webhookCache.has(channel.id)) {
+        return webhookCache.get(channel.id);
+    }
+
+    try {
+        // Chercher un webhook existant
+        let webhook = await channel.fetchWebhooks()
+            .then(hooks => hooks.find(hook => hook.owner.id === client.user.id));
+        
+        // Créer un nouveau webhook si nécessaire
+        if (!webhook) {
+            webhook = await channel.createWebhook({
+                name: 'CommuSyncro',
+                avatar: client.user.displayAvatarURL()
+            });
+        }
+
+        // Mettre en cache
+        webhookCache.set(channel.id, webhook);
+        return webhook;
+    } catch (error) {
+        console.error(`Erreur lors de la création du webhook pour ${channel.id}:`, error);
+        return null;
+    }
+}
+
+// Fonction pour envoyer un message avec retry
+async function sendWebhookMessage(webhook, options, maxRetries = 3) {
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            await webhook.send(options);
+            return true;
+        } catch (error) {
+            console.error(`Tentative ${i + 1}/${maxRetries} échouée:`, error);
+            if (i === maxRetries - 1) {
+                throw error;
+            }
+            // Attendre avant de réessayer (1s, 2s, 4s)
+            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+        }
+    }
+    return false;
+}
+
 // Synchronisation des messages
 client.on('messageCreate', async (message) => {
     try {
         // Ignorer les messages du bot
         if (message.author.bot) return;
 
-        // Trouver le groupe du canal actuel
-        const sourceChannel = await SyncedChannel.findOne({
-            where: { channelId: message.channel.id }
-        });
+        // Récupérer le groupe du canal
+        const groupId = await getChannelGroup(message.channel.id);
+        if (!groupId) return; // Le canal n'est pas synchronisé
 
-        if (!sourceChannel) {
-            return; // Canal non synchronisé
+        // Récupérer tous les canaux du groupe
+        const syncedChannels = await getSyncedChannels();
+        const channelsInGroup = syncedChannels.get(groupId);
+        
+        if (!channelsInGroup) return;
+
+        // Supprimer le message original
+        try {
+            await message.delete();
+        } catch (error) {
+            console.error('Erreur lors de la suppression du message:', error);
         }
 
-        console.log('Message reçu dans le canal:', message.channel.id, 'groupe:', sourceChannel.groupId);
+        // Préparer les options de base du webhook
+        const webhookOptions = {
+            username: message.member.displayName,
+            avatarURL: message.author.displayAvatarURL()
+        };
 
-        // Trouver tous les autres canaux du même groupe
-        const targetChannels = await SyncedChannel.findAll({
-            where: {
-                groupId: sourceChannel.groupId,
-                channelId: {
-                    [Sequelize.Op.ne]: message.channel.id // Exclure le canal source
+        // Envoyer à tous les canaux
+        for (const channelId of channelsInGroup) {
+            try {
+                const channel = await client.channels.fetch(channelId);
+                if (!channel) continue;
+
+                const webhook = await getWebhookForChannel(channel);
+                if (!webhook) continue;
+
+                // 1. Message avec image
+                if (message.attachments.size > 0) {
+                    const attachment = message.attachments.first();
+                    let retries = 3;
+                    
+                    while (retries > 0) {
+                        try {
+                            // Télécharger l'image avec axios
+                            const response = await axios({
+                                method: 'get',
+                                url: attachment.url,
+                                responseType: 'arraybuffer',
+                                timeout: 5000,
+                                headers: {
+                                    'User-Agent': 'Discord Bot'
+                                }
+                            });
+                            
+                            // Envoyer l'image comme fichier
+                            await webhook.send({
+                                ...webhookOptions,
+                                content: message.content || '',
+                                files: [{
+                                    attachment: response.data,
+                                    name: attachment.name
+                                }]
+                            });
+
+                            // Si on arrive ici, tout s'est bien passé
+                            break;
+                        } catch (error) {
+                            console.error(`Tentative ${4-retries}/3 échouée:`, error.message);
+                            retries--;
+                            if (retries > 0) {
+                                // Attendre avant de réessayer (1s, puis 2s, puis 3s)
+                                await new Promise(resolve => setTimeout(resolve, (4-retries) * 1000));
+                            }
+                        }
+                    }
+
+                    // Attendre entre chaque message
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 }
-            }
-        });
-
-        if (targetChannels.length === 0) {
-            console.log('Aucun autre canal dans le groupe:', sourceChannel.groupId);
-            return;
-        }
-
-        console.log('Canaux cibles:', targetChannels.map(c => c.channelId));
-
-        // Créer l'embed pour le message
-        const messageEmbed = new EmbedBuilder()
-            .setColor(ROUGE_COMMUNISTE)
-            .setAuthor({
-                name: message.author.tag,
-                iconURL: message.author.displayAvatarURL()
-            })
-            .setDescription(message.content)
-            .setFooter({
-                text: `Depuis ${message.guild.name}`,
-                iconURL: message.guild.iconURL()
-            })
-            .setTimestamp();
-
-        // Ajouter les images si présentes
-        if (message.attachments.size > 0) {
-            const attachment = message.attachments.first();
-            if (attachment.contentType?.startsWith('image/')) {
-                messageEmbed.setImage(attachment.url);
-            }
-        }
-
-        // Envoyer le message à tous les canaux cibles
-        for (const targetChannel of targetChannels) {
-            const channel = client.channels.cache.get(targetChannel.channelId);
-            if (channel && channel.permissionsFor(client.user).has('SendMessages')) {
-                try {
-                    await channel.send({ embeds: [messageEmbed] });
-                    console.log('Message synchronisé vers:', targetChannel.channelId);
-                } catch (error) {
-                    console.error('Erreur lors de l\'envoi vers le canal:', targetChannel.channelId, error);
+                // 2. GIF Tenor
+                else if (message.content && message.content.includes('tenor.com')) {
+                    await webhook.send({
+                        ...webhookOptions,
+                        content: message.content
+                    });
                 }
-            } else {
-                console.log('Canal non accessible:', targetChannel.channelId);
+                // 3. Message texte normal
+                else if (message.content) {
+                    await webhook.send({
+                        ...webhookOptions,
+                        embeds: [{
+                            color: 0xFF0000,
+                            description: message.content,
+                            footer: {
+                                text: `☭ Camarade du serveur ${message.guild.name} ☭`,
+                                icon_url: message.guild.iconURL({ size: 16 })
+                            }
+                        }]
+                    });
+                }
+
+            } catch (error) {
+                console.error(`Erreur pour le canal ${channelId}:`, error);
             }
         }
+
     } catch (error) {
         console.error('Erreur lors de la synchronisation du message:', error);
     }
@@ -446,5 +559,31 @@ client.on('disconnect', () => {
         client.login(process.env.TOKEN);
     }, 5000);
 });
+
+// Nettoyage des canaux invalides
+async function cleanInvalidChannels(client) {
+    const syncedChannels = await getSyncedChannels();
+    for (const groupId in syncedChannels) {
+        const channelsInGroup = syncedChannels[groupId];
+        for (const channelId of channelsInGroup) {
+            try {
+                const channel = await client.channels.fetch(channelId);
+                if (!channel) {
+                    console.log(`Canal introuvable, nettoyage: ${channelId}`);
+                    await removeSyncedChannel(channelId);
+                    webhookCache.delete(channelId);
+                }
+            } catch (error) {
+                if (error.code === 10003) { // Unknown Channel
+                    console.log(`Canal invalide, nettoyage: ${channelId}`);
+                    await removeSyncedChannel(channelId);
+                    webhookCache.delete(channelId);
+                } else {
+                    console.error(`Erreur lors du nettoyage du canal ${channelId}:`, error);
+                }
+            }
+        }
+    }
+}
 
 client.login(process.env.TOKEN);

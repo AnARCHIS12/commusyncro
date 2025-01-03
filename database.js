@@ -230,6 +230,34 @@ async function linkPortal(inviteCode, targetGuildId, targetChannelId) {
     }
 }
 
+// Nettoyer les canaux invalides
+async function cleanInvalidChannels(client) {
+    try {
+        const channels = await SyncedChannel.findAll();
+        
+        for (const channel of channels) {
+            try {
+                const discordChannel = await client.channels.fetch(channel.channelId);
+                if (!discordChannel) {
+                    await SyncedChannel.destroy({
+                        where: { channelId: channel.channelId }
+                    });
+                    console.log(`Canal supprimé de la base de données: ${channel.channelId}`);
+                }
+            } catch (error) {
+                if (error.code === 10003) { // Unknown Channel
+                    await SyncedChannel.destroy({
+                        where: { channelId: channel.channelId }
+                    });
+                    console.log(`Canal invalide supprimé: ${channel.channelId}`);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Erreur lors du nettoyage des canaux:', error);
+    }
+}
+
 module.exports = {
     initDatabase,
     addSyncedChannel,
@@ -241,6 +269,7 @@ module.exports = {
     getActivePortals,
     deactivatePortal,
     linkPortal,
+    cleanInvalidChannels,
     ServerTunnel,
     SyncedChannel,
     Sequelize
