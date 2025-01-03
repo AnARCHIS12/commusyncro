@@ -27,14 +27,25 @@
         <circle cx="80" cy="80" r="20" fill="#FFFFFF"/>
     </g>
     
-    <!-- Symbole de connexion central -->
+    <!-- Marteau et faucille -->
     <g transform="translate(256 256)">
         <!-- Cercle central -->
-        <circle cx="0" cy="0" r="40" fill="#FF0000"/>
-        <!-- Lignes de connexion -->
-        <line x1="-20" y1="-20" x2="20" y2="20" 
-              stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
-        <line x1="-20" y1="20" x2="20" y2="-20" 
-              stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+        <circle cx="0" cy="0" r="45" fill="#FF0000"/>
+        
+        <!-- Marteau -->
+        <g transform="rotate(-45)">
+            <rect x="-5" y="-35" width="10" height="40" fill="#FFFFFF"/>
+            <rect x="-15" y="-35" width="30" height="15" fill="#FFFFFF"/>
+        </g>
+        
+        <!-- Faucille -->
+        <path d="M-10,-10 A30,30 0 0,1 25,15" 
+              stroke="#FFFFFF" 
+              stroke-width="10" 
+              stroke-linecap="round" 
+              fill="none"/>
+        <rect x="15" y="5" width="10" height="25" 
+              transform="rotate(45)" 
+              fill="#FFFFFF"/>
     </g>
 </svg>
