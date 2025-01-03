@@ -19,91 +19,46 @@ document.addEventListener('DOMContentLoaded', function() {
                     section.classList.add('active');
                 }
             });
+
+            // Smooth scroll
+            const targetSection = document.getElementById(targetId);
+            const offset = 70; // Height of fixed nav
+            const targetPosition = targetSection.getBoundingClientRect().top + window.pageYOffset - offset;
+            
+            window.scrollTo({
+                top: targetPosition,
+                behavior: 'smooth'
+            });
         });
     });
 
     // Search functionality
     const searchInput = document.getElementById('search');
+    let searchTimeout;
+
     searchInput.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        const content = document.querySelectorAll('.section h2, .section h3, .section p');
-        
-        content.forEach(element => {
-            const text = element.textContent.toLowerCase();
-            const parent = element.closest('.section');
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            const searchTerm = e.target.value.toLowerCase();
+            const content = document.querySelectorAll('.section h2, .section h3, .section p, .feature-card');
             
-            if (text.includes(searchTerm)) {
-                parent.style.display = 'block';
-                // Highlight matching text
-                const regex = new RegExp(searchTerm, 'gi');
-                element.innerHTML = element.textContent.replace(regex, match => `<mark>${match}</mark>`);
-            } else {
-                if (!Array.from(parent.querySelectorAll('h2, h3, p')).some(el => 
-                    el.textContent.toLowerCase().includes(searchTerm))) {
-                    parent.style.display = 'none';
-                }
-            }
-        });
-    });
-
-    // Configuration tabs
-    const tabs = document.querySelectorAll('.tab');
-    const tabContents = document.querySelectorAll('.tab-pane');
-
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            const target = tab.getAttribute('data-tab');
-            
-            // Update active tab
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            
-            // Show target content
-            tabContents.forEach(content => {
-                content.classList.remove('active');
-                if (content.id === target) {
-                    content.classList.add('active');
+            content.forEach(element => {
+                const text = element.textContent.toLowerCase();
+                const parent = element.closest('.section') || element;
+                
+                if (text.includes(searchTerm)) {
+                    parent.style.display = 'block';
+                    if (!element.classList.contains('feature-card')) {
+                        const regex = new RegExp(searchTerm, 'gi');
+                        element.innerHTML = element.textContent.replace(regex, match => `<mark>${match}</mark>`);
+                    }
+                } else {
+                    if (!Array.from(parent.querySelectorAll('h2, h3, p')).some(el => 
+                        el.textContent.toLowerCase().includes(searchTerm))) {
+                        parent.style.display = 'none';
+                    }
                 }
             });
-        });
-    });
-
-    // Copy code blocks
-    document.querySelectorAll('.code-block').forEach(block => {
-        const copyButton = document.createElement('button');
-        copyButton.className = 'copy-button';
-        copyButton.innerHTML = '<i class="fas fa-copy"></i>';
-        
-        copyButton.addEventListener('click', () => {
-            const code = block.querySelector('code') || block;
-            navigator.clipboard.writeText(code.textContent);
-            
-            copyButton.innerHTML = '<i class="fas fa-check"></i>';
-            setTimeout(() => {
-                copyButton.innerHTML = '<i class="fas fa-copy"></i>';
-            }, 2000);
-        });
-        
-        block.appendChild(copyButton);
-    });
-
-    // Mobile menu toggle
-    const menuToggle = document.createElement('button');
-    menuToggle.className = 'menu-toggle';
-    menuToggle.innerHTML = '<i class="fas fa-bars"></i>';
-    document.querySelector('.sidebar-header').prepend(menuToggle);
-
-    menuToggle.addEventListener('click', () => {
-        document.querySelector('.sidebar').classList.toggle('expanded');
-    });
-});
-
-// Smooth scroll
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        document.querySelector(this.getAttribute('href')).scrollIntoView({
-            behavior: 'smooth'
-        });
+        }, 300);
     });
 });

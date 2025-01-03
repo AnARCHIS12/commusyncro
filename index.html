@@ -9,11 +9,7 @@
     <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
 </head>
 <body>
-    <nav class="sidebar">
-        <div class="sidebar-header">
-            <img src="assets/logo.svg" alt="Logo CommuSyncro" class="logo">
-            <h1>CommuSyncro</h1>
-        </div>
+    <nav class="nav-bar">
         <ul class="nav-links">
             <li><a href="#accueil" class="active"><i class="fas fa-home"></i> Accueil</a></li>
             <li><a href="#installation"><i class="fas fa-download"></i> Installation</a></li>
@@ -21,20 +17,11 @@
             <li><a href="#configuration"><i class="fas fa-cogs"></i> Configuration</a></li>
             <li><a href="#api"><i class="fas fa-code"></i> API</a></li>
         </ul>
-        <div class="sidebar-footer">
-            <a href="https://github.com/AnARCHIS12/commusyncro" target="_blank">
-                <i class="fab fa-github"></i> GitHub
-            </a>
-            <a href="https://discord.gg/EBMCgDZrGa" target="_blank">
-                <i class="fab fa-discord"></i> Discord
-            </a>
-        </div>
     </nav>
 
     <main class="content">
         <div class="search-bar">
             <input type="text" placeholder="Rechercher dans la documentation..." id="search">
-            <i class="fas fa-search"></i>
         </div>
 
         <section id="accueil" class="section active">
@@ -47,6 +34,7 @@
                     <a href="https://discord.com/oauth2/authorize?client_id=1324723736506662986&permissions=8&integration_type=0&scope=applications.commands+bot" class="btn secondary" target="_blank">Ajouter le Bot</a>
                 </div>
             </div>
+
             <div class="features">
                 <div class="feature-card">
                     <i class="fas fa-sync"></i>
@@ -71,14 +59,12 @@
             <div class="installation-steps">
                 <div class="step">
                     <h3>1. Créez une Application Discord</h3>
+                    <p>Rendez-vous sur le <a href="https://discord.com/developers/applications" target="_blank">Discord Developer Portal</a></p>
                     <div class="code-block">
-                        <p>Rendez-vous sur le <a href="https://discord.com/developers/applications" target="_blank">Discord Developer Portal</a></p>
-                        <ol>
-                            <li>Cliquez sur "New Application"</li>
-                            <li>Nommez votre application "CommuSyncro"</li>
-                            <li>Allez dans l'onglet "Bot"</li>
-                            <li>Cliquez sur "Add Bot"</li>
-                        </ol>
+                        <pre><code>1. Cliquez sur "New Application"
+2. Nommez votre application "CommuSyncro"
+3. Allez dans l'onglet "Bot"
+4. Cliquez sur "Add Bot"</code></pre>
                     </div>
                 </div>
                 <div class="step">
@@ -107,56 +93,34 @@ npm install</code></pre>
 
         <section id="commandes" class="section">
             <h2>Commandes</h2>
-            <div class="commands-grid">
-                <div class="command-card">
-                    <div class="command-header">
-                        <i class="fas fa-sync"></i>
-                        <h3>/sync</h3>
-                    </div>
+            <div class="features">
+                <div class="feature-card">
+                    <i class="fas fa-sync"></i>
+                    <h3>/sync</h3>
                     <p>Synchronise un salon avec le réseau</p>
-                    <div class="command-details">
-                        <span class="permission">Admin</span>
-                        <a href="#" class="btn-small">Détails</a>
-                    </div>
                 </div>
-                <div class="command-card">
-                    <div class="command-header">
-                        <i class="fas fa-link"></i>
-                        <h3>/linkchannel</h3>
-                    </div>
+                <div class="feature-card">
+                    <i class="fas fa-link"></i>
+                    <h3>/linkchannel</h3>
                     <p>Connecte à un salon existant</p>
-                    <div class="command-details">
-                        <span class="permission">Admin</span>
-                        <a href="#" class="btn-small">Détails</a>
-                    </div>
                 </div>
-                <div class="command-card">
-                    <div class="command-header">
-                        <i class="fas fa-tunnel"></i>
-                        <h3>/createtunnel</h3>
-                    </div>
+                <div class="feature-card">
+                    <i class="fas fa-tunnel"></i>
+                    <h3>/createtunnel</h3>
                     <p>Crée un tunnel permanent</p>
-                    <div class="command-details">
-                        <span class="permission">Admin</span>
-                        <a href="#" class="btn-small">Détails</a>
-                    </div>
                 </div>
             </div>
         </section>
 
         <section id="configuration" class="section">
             <h2>Configuration</h2>
-            <div class="config-tabs">
-                <div class="tab active" data-tab="env">Variables d'environnement</div>
-                <div class="tab" data-tab="messages">Messages</div>
-                <div class="tab" data-tab="permissions">Permissions</div>
-            </div>
-            <div class="tab-content">
-                <div class="tab-pane active" id="env">
+            <div class="installation-steps">
+                <div class="step">
+                    <h3>Variables d'environnement</h3>
                     <div class="code-block">
                         <pre><code># Configuration Discord
 TOKEN=votre_token_bot
-CLIENT_ID=id_application
+CLIENT_ID=1324723736506662986
 GUILD_ID=id_serveur_test
 
 # Configuration Base de données
@@ -170,14 +134,14 @@ DB_NAME=commusyncro</code></pre>
 
         <section id="api" class="section">
             <h2>API</h2>
-            <div class="api-docs">
-                <div class="endpoint">
+            <div class="installation-steps">
+                <div class="step">
                     <h3>Authentication</h3>
                     <div class="code-block">
                         <pre><code>POST /api/auth/token
 
 {
-  "clientId": "votre_client_id",
+  "clientId": "1324723736506662986",
   "clientSecret": "votre_client_secret"
 }</code></pre>
                     </div>
@@ -185,6 +149,15 @@ DB_NAME=commusyncro</code></pre>
             </div>
         </section>
     </main>
+
+    <footer class="footer">
+        <a href="https://github.com/AnARCHIS12/commusyncro" target="_blank">
+            <i class="fab fa-github"></i> GitHub
+        </a>
+        <a href="https://discord.gg/EBMCgDZrGa" target="_blank">
+            <i class="fab fa-discord"></i> Discord
+        </a>
+    </footer>
 
     <script src="js/script.js"></script>
 </body>
