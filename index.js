@@ -70,6 +70,7 @@ client.once('ready', async () => {
         syncedChannels = await getSyncedChannels();
         
         console.log('Préparation de la révolution...');
+        // Enregistrement global des commandes pour tous les serveurs
         await rest.put(
             Routes.applicationCommands(client.user.id),
             { body: commands }
