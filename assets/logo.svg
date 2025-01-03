@@ -27,7 +27,14 @@
         <circle cx="80" cy="80" r="20" fill="#FFFFFF"/>
     </g>
     
-    <!-- Étoile centrale -->
-    <path d="M256 176l24.72 76.08h80.08l-64.8 47.04 24.72 76.08-64.8-47.04-64.8 47.04 24.72-76.08-64.8-47.04h80.08z"
-          fill="#FF0000"/>
+    <!-- Symbole de connexion central -->
+    <g transform="translate(256 256)">
+        <!-- Cercle central -->
+        <circle cx="0" cy="0" r="40" fill="#FF0000"/>
+        <!-- Lignes de connexion -->
+        <line x1="-20" y1="-20" x2="20" y2="20" 
+              stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+        <line x1="-20" y1="20" x2="20" y2="-20" 
+              stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"/>
+    </g>
 </svg>
