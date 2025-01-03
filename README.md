@@ -23,83 +23,55 @@
 
 ## 📖 Documentation
 
-CommuSyncro est un bot Discord révolutionnaire qui permet l'unification des serveurs Discord, créant une alliance indestructible entre les communautés. Grâce à une technologie de pointe, nous brisons les barrières entre les serveurs !
+La documentation complète est disponible dans le dossier [docs/](docs/) :
 
-### 🎯 Cas d'utilisation principaux
+- 📥 [Guide d'Installation](docs/installation.md)
+- 🛠️ [Guide des Commandes](docs/commandes.md)
+- ⚙️ [Guide de Configuration](docs/configuration.md)
+- 🔌 [Documentation API](docs/api.md)
 
-- **Communication inter-serveurs** : Partagez des messages instantanément entre plusieurs serveurs
-- **Annonces globales** : Diffusez des informations importantes à travers tous vos serveurs
-- **Gestion centralisée** : Administrez facilement plusieurs communautés depuis un point central
+## ⚡ Installation Rapide
 
-## ⚡ Installation
+```bash
+# Clonez le dépôt
+git clone https://github.com/AnARCHIS12/commusyncro.git
+cd commusyncro
 
-### Prérequis
+# Installez les dépendances
+npm install
 
-- Node.js 16.9.0 ou supérieur
-- npm ou yarn
-- Un token de bot Discord
-- Permissions d'administrateur sur les serveurs cibles
+# Configurez le bot
+cp .env.example .env
+# Éditez .env avec votre token Discord
 
-### Configuration rapide
+# Lancez le bot
+npm start
+```
 
-1. **Clonez le dépôt**
-   ```bash
-   git clone https://github.com/AnARCHIS12/commusyncro.git
-   cd commusyncro
-   ```
-
-2. **Installez les dépendances**
-   ```bash
-   npm install
-   ```
-
-3. **Configurez les variables d'environnement**
-   ```bash
-   cp .env.example .env
-   # Éditez .env avec votre token et vos configurations
-   ```
-
-4. **Lancez le bot**
-   ```bash
-   npm start
-   ```
+Pour une installation détaillée, consultez le [Guide d'Installation](docs/installation.md).
 
 ## 🚀 Fonctionnalités
 
-### Commandes slash
+### Commandes Principales
 
-| Commande | Description | Permission |
-|----------|-------------|------------|
-| `/sync` | Unifie un salon avec le réseau | Admin |
-| `/linkchannel` | Connecte à un salon existant | Admin |
-| `/createtunnel` | Crée un tunnel permanent | Admin |
-| `/tunnels` | Liste les tunnels actifs | Admin |
+| Commande | Description | Documentation |
+|----------|-------------|---------------|
+| `/sync` | Synchronise un salon | [En savoir plus](docs/commandes.md#sync) |
+| `/linkchannel` | Connecte deux salons | [En savoir plus](docs/commandes.md#linkchannel) |
+| `/createtunnel` | Crée un tunnel permanent | [En savoir plus](docs/commandes.md#createtunnel) |
+| `/tunnels` | Liste les tunnels actifs | [En savoir plus](docs/commandes.md#tunnels) |
 
-### Système de permissions
+Pour la liste complète des commandes, consultez le [Guide des Commandes](docs/commandes.md).
 
-- **Administrateurs** : Accès complet à toutes les commandes
-- **Modérateurs** : Gestion des messages et des utilisateurs
-- **Utilisateurs** : Participation aux discussions inter-serveurs
+## 🛠️ Configuration
 
-## 🛠️ Configuration avancée
+La configuration se fait via le fichier `.env` et les fichiers de configuration dans `config/`.
+Pour plus de détails, consultez le [Guide de Configuration](docs/configuration.md).
 
-### Personnalisation des messages
+## 🔌 API
 
-```javascript
-// config/messages.js
-module.exports = {
-  embedColor: '#FF0000',
-  footerText: 'Powered by CommuSyncro',
-  // ...
-}
-```
-
-### Webhooks et intégrations
-
-Le bot supporte les webhooks Discord pour :
-- Notifications GitHub
-- Flux RSS
-- Intégrations personnalisées
+CommuSyncro propose une API REST et WebSocket pour les intégrations externes.
+Consultez la [Documentation API](docs/api.md) pour plus d'informations.
 
 ## 🤝 Contribution
 
@@ -111,10 +83,12 @@ Nous accueillons chaleureusement toutes les contributions ! Voici comment partic
 4. 📤 Pushez vers la branche (`git push origin feature/AmeliorationIncroyable`)
 5. 🔄 Ouvrez une Pull Request
 
+Consultez notre [Guide de Contribution](docs/contribution.md) pour plus de détails.
+
 ## 💬 Support
 
-- [Serveur Discord officiel](https://discord.gg/your-invite)
-- [Documentation complète](https://docs.commusyncro.com)
+- [Documentation Complète](docs/)
+- [Serveur Discord](https://discord.gg/your-invite)
 - [FAQ](https://github.com/AnARCHIS12/commusyncro/wiki/FAQ)
 
 ### Signalement de bugs
@@ -123,7 +97,7 @@ Utilisez le [système d'issues](https://github.com/AnARCHIS12/commusyncro/issues
 
 ## 📜 Licence
 
-CommuSyncro est distribué sous la licence MIT. Voir le fichier `LICENSE` pour plus d'informations.
+CommuSyncro est distribué sous la licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus d'informations.
 
 ---
 
