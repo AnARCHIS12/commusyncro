@@ -185,32 +185,23 @@ client.on('interactionCreate', async interaction => {
     }
 
     else if (commandName === 'unsync') {
-        // Vérifier les permissions
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-            return interaction.reply({
+            return interaction.reply({ 
                 content: `${POING} Camarade, vous n'avez pas les autorisations nécessaires pour cette action !`,
                 flags: ['Ephemeral']
             });
         }
 
         try {
-            const success = await removeSyncedChannel(interaction.channel.id);
-            
-            if (success) {
-                await interaction.reply({
-                    content: `${POING} Le canal a été retiré de la synchronisation.`,
-                    flags: ['Ephemeral']
-                });
-            } else {
-                await interaction.reply({
-                    content: `${POING} Une erreur est survenue lors du retrait de la synchronisation.`,
-                    flags: ['Ephemeral']
-                });
-            }
-        } catch (error) {
-            console.error('Erreur lors du retrait de la synchronisation:', error);
+            await removeSyncedChannel(interaction.channel.id);
             await interaction.reply({
-                content: `${POING} Une erreur est survenue lors du retrait de la synchronisation.`,
+                content: `${MONDE} Ce salon a été retiré de la cause commune ! ${MARTEAU_FAUCILLE}`,
+                flags: ['Ephemeral']
+            });
+        } catch (error) {
+            console.error('Erreur lors du retrait du salon:', error);
+            await interaction.reply({
+                content: `${POING} Une erreur est survenue lors du retrait du salon.`,
                 flags: ['Ephemeral']
             });
         }
