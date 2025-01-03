@@ -1,7 +1,7 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const path = require('path');
 
-// Initialisation de la base de données SQLite
+// Création de la connexion à la base de données
 const sequelize = new Sequelize({
     dialect: 'sqlite',
     storage: path.join(__dirname, 'database.sqlite'),
@@ -10,49 +10,96 @@ const sequelize = new Sequelize({
 
 // Modèle pour les salons synchronisés
 const SyncedChannel = sequelize.define('SyncedChannel', {
+    groupId: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
     channelId: {
         type: DataTypes.STRING,
         allowNull: false
     },
-    groupId: {
-        type: DataTypes.STRING,
-        allowNull: false
-    }
-});
-
-// Modèle pour les tunnels entre serveurs
-const ServerTunnel = sequelize.define('ServerTunnel', {
     guildId: {
         type: DataTypes.STRING,
         allowNull: false
-    },
-    description: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    inviteUrl: {
-        type: DataTypes.STRING,
-        allowNull: false
     }
 });
 
-// Synchronisation des modèles avec la base de données
+// Modèle pour les portails entre serveurs
+const ServerTunnel = sequelize.define('ServerTunnel', {
+    sourceGuildId: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
+    sourceChannelId: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
+    targetGuildId: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
+    targetChannelId: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
+    description: {
+        type: Sequelize.STRING,
+        allowNull: true,
+        defaultValue: ''  // Valeur par défaut vide
+    },
+    inviteCode: {
+        type: Sequelize.STRING,
+        allowNull: false
+    },
+    active: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: true
+    }
+});
+
+// Initialisation de la base de données
 async function initDatabase() {
     try {
-        await sequelize.sync();
-        console.log('✅ Base de données synchronisée');
+        await sequelize.authenticate();
+        console.log('Connexion à la base de données établie.');
+        
+        // Synchroniser les tables sans les recréer
+        await sequelize.sync({ force: false });
+        console.log('Base de données synchronisée avec succès.');
+        
+        return true;
     } catch (error) {
-        console.error('❌ Erreur lors de la synchronisation de la base de données:', error);
+        console.error('Erreur de connexion à la base de données:', error);
+        return false;
     }
 }
 
-// Fonctions d'aide pour la gestion des salons synchronisés
-async function addSyncedChannel(channelId, groupId) {
+// Fonctions pour les salons synchronisés
+async function addSyncedChannel(guildId, channelId, groupId) {
     try {
-        await SyncedChannel.create({ channelId, groupId });
+        // Vérifier si le canal existe déjà dans ce groupe
+        const existingChannel = await SyncedChannel.findOne({
+            where: {
+                channelId: channelId,
+                groupId: groupId
+            }
+        });
+
+        if (existingChannel) {
+            console.log('Le canal est déjà dans ce groupe:', existingChannel.toJSON());
+            return true;
+        }
+
+        const channel = await SyncedChannel.create({
+            guildId,
+            channelId,
+            groupId
+        });
+        console.log('Canal ajouté à la synchronisation:', channel.toJSON());
         return true;
     } catch (error) {
-        console.error('Erreur lors de l\'ajout du salon:', error);
+        console.error('Erreur lors de l\'ajout du canal:', error);
         return false;
     }
 }
@@ -60,48 +107,40 @@ async function addSyncedChannel(channelId, groupId) {
 async function getSyncedChannels() {
     try {
         const channels = await SyncedChannel.findAll();
-        const syncMap = new Map();
+        console.log('Canaux trouvés dans la base de données:', channels.map(c => c.toJSON()));
         
+        // Organiser les canaux par groupe
+        const groupedChannels = new Map();
         channels.forEach(channel => {
-            if (!syncMap.has(channel.groupId)) {
-                syncMap.set(channel.groupId, new Set());
+            if (!groupedChannels.has(channel.groupId)) {
+                groupedChannels.set(channel.groupId, new Set());
             }
-            syncMap.get(channel.groupId).add(channel.channelId);
+            groupedChannels.get(channel.groupId).add(channel.channelId);
         });
         
-        return syncMap;
+        console.log('Groupes de canaux:', 
+            Array.from(groupedChannels.entries()).map(([groupId, channels]) => ({
+                groupe: groupId,
+                canaux: Array.from(channels)
+            }))
+        );
+        
+        return groupedChannels;
     } catch (error) {
-        console.error('Erreur lors de la récupération des salons:', error);
+        console.error('Erreur lors de la récupération des canaux synchronisés:', error);
         return new Map();
     }
 }
 
-// Fonctions d'aide pour la gestion des tunnels
-async function addServerTunnel(guildId, description, inviteUrl) {
+async function getChannelGroup(channelId) {
     try {
-        await ServerTunnel.create({ guildId, description, inviteUrl });
-        return true;
-    } catch (error) {
-        console.error('Erreur lors de l\'ajout du tunnel:', error);
-        return false;
-    }
-}
-
-async function getServerTunnels(guildId) {
-    try {
-        const tunnels = await ServerTunnel.findAll({
-            where: { guildId }
+        const channel = await SyncedChannel.findOne({
+            where: { channelId }
         });
-        const tunnelMap = new Map();
-        
-        tunnels.forEach(tunnel => {
-            tunnelMap.set(tunnel.description, tunnel.inviteUrl);
-        });
-        
-        return tunnelMap;
+        return channel ? channel.groupId : null;
     } catch (error) {
-        console.error('Erreur lors de la récupération des tunnels:', error);
-        return new Map();
+        console.error('Erreur lors de la récupération du groupe:', error);
+        return null;
     }
 }
 
@@ -112,19 +151,81 @@ async function removeSyncedChannel(channelId) {
         });
         return true;
     } catch (error) {
-        console.error('Erreur lors de la suppression du salon:', error);
+        console.error('Erreur lors de la suppression du canal:', error);
         return false;
     }
 }
 
-async function removeServerTunnel(guildId, description) {
+// Fonctions pour les portails
+async function createPortal(data) {
     try {
-        await ServerTunnel.destroy({
-            where: { guildId, description }
+        const portal = await ServerTunnel.create({
+            sourceGuildId: data.sourceGuildId,
+            sourceChannelId: data.sourceChannelId,
+            targetGuildId: data.targetGuildId,
+            targetChannelId: data.targetChannelId,
+            description: data.description || '',  // Utiliser une chaîne vide si pas de description
+            inviteCode: data.inviteCode,
+            active: data.active
         });
-        return true;
+        console.log('Portail créé:', portal.toJSON());
+        return portal;
     } catch (error) {
-        console.error('Erreur lors de la suppression du tunnel:', error);
+        console.error('Erreur lors de la création du portail:', error);
+        return null;
+    }
+}
+
+async function getPortal(id) {
+    try {
+        const portal = await ServerTunnel.findByPk(id);
+        return portal;
+    } catch (error) {
+        console.error('Erreur lors de la récupération du portail:', error);
+        return null;
+    }
+}
+
+async function getActivePortals() {
+    try {
+        const portals = await ServerTunnel.findAll({
+            where: {
+                active: true
+            }
+        });
+        return portals;
+    } catch (error) {
+        console.error('Erreur lors de la récupération des portails actifs:', error);
+        return [];
+    }
+}
+
+async function deactivatePortal(inviteCode) {
+    try {
+        const portal = await ServerTunnel.findOne({
+            where: { inviteCode }
+        });
+        if (portal) {
+            await portal.update({ active: false });
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('Erreur lors de la désactivation du portail:', error);
+        return false;
+    }
+}
+
+async function linkPortal(inviteCode, targetGuildId, targetChannelId) {
+    try {
+        const portal = await ServerTunnel.findOne({ where: { inviteCode } });
+        if (portal) {
+            await portal.update({ targetGuildId, targetChannelId });
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('Erreur lors de la liaison du portail:', error);
         return false;
     }
 }
@@ -133,8 +234,14 @@ module.exports = {
     initDatabase,
     addSyncedChannel,
     getSyncedChannels,
-    addServerTunnel,
-    getServerTunnels,
+    getChannelGroup,
     removeSyncedChannel,
-    removeServerTunnel
+    createPortal,
+    getPortal,
+    getActivePortals,
+    deactivatePortal,
+    linkPortal,
+    ServerTunnel,
+    SyncedChannel,
+    Sequelize
 };
