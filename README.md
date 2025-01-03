@@ -1,89 +1,138 @@
-# ☭ Le Grand Bot de l'Union des Serveurs Discord ☭
+# ☭ CommuSyncro - L'Unificateur de Serveurs Discord ☭
 
-![Bannière de l'Union](https://i.imgur.com/placeholder.png)
+<div align="center">
+
+![Logo CommuSyncro](https://i.imgur.com/placeholder.png)
+
+[![Discord](https://img.shields.io/discord/YOUR_DISCORD_ID?color=7289DA&logo=discord&logoColor=white)](https://discord.gg/your-invite)
+[![GitHub license](https://img.shields.io/github/license/AnARCHIS12/commusyncro)](https://github.com/AnARCHIS12/commusyncro/blob/main/LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/AnARCHIS12/commusyncro)](https://github.com/AnARCHIS12/commusyncro/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/AnARCHIS12/commusyncro)](https://github.com/AnARCHIS12/commusyncro/issues)
+[![Node.js Version](https://img.shields.io/node/v/discord.js)](https://nodejs.org/)
+[![Discord.js](https://img.shields.io/badge/discord.js-v14-blue.svg)](https://discord.js.org)
 
 > *"De chaque serveur selon ses moyens, à chaque serveur selon ses besoins !"*
 
-## 🚩 La Révolution des Communications 🚩
+[Documentation](#-documentation) •
+[Installation](#-installation) •
+[Fonctionnalités](#-fonctionnalités) •
+[Contribution](#-contribution) •
+[Support](#-support)
 
-Ce bot révolutionnaire permet l'unification glorieuse des serveurs Discord, créant une alliance indestructible entre les communautés ! Par la force de la technologie et l'union des camarades, nous brisons les barrières entre les serveurs !
+</div>
 
-## ✊ Installation pour la Cause ✊
+## 📖 Documentation
 
-1. Installez les dépendances du Parti :
-```bash
-npm install # Pour la gloire de Node.js !
+CommuSyncro est un bot Discord révolutionnaire qui permet l'unification des serveurs Discord, créant une alliance indestructible entre les communautés. Grâce à une technologie de pointe, nous brisons les barrières entre les serveurs !
+
+### 🎯 Cas d'utilisation principaux
+
+- **Communication inter-serveurs** : Partagez des messages instantanément entre plusieurs serveurs
+- **Annonces globales** : Diffusez des informations importantes à travers tous vos serveurs
+- **Gestion centralisée** : Administrez facilement plusieurs communautés depuis un point central
+
+## ⚡ Installation
+
+### Prérequis
+
+- Node.js 16.9.0 ou supérieur
+- npm ou yarn
+- Un token de bot Discord
+- Permissions d'administrateur sur les serveurs cibles
+
+### Configuration rapide
+
+1. **Clonez le dépôt**
+   ```bash
+   git clone https://github.com/AnARCHIS12/commusyncro.git
+   cd commusyncro
+   ```
+
+2. **Installez les dépendances**
+   ```bash
+   npm install
+   ```
+
+3. **Configurez les variables d'environnement**
+   ```bash
+   cp .env.example .env
+   # Éditez .env avec votre token et vos configurations
+   ```
+
+4. **Lancez le bot**
+   ```bash
+   npm start
+   ```
+
+## 🚀 Fonctionnalités
+
+### Commandes slash
+
+| Commande | Description | Permission |
+|----------|-------------|------------|
+| `/sync` | Unifie un salon avec le réseau | Admin |
+| `/linkchannel` | Connecte à un salon existant | Admin |
+| `/createtunnel` | Crée un tunnel permanent | Admin |
+| `/tunnels` | Liste les tunnels actifs | Admin |
+
+### Système de permissions
+
+- **Administrateurs** : Accès complet à toutes les commandes
+- **Modérateurs** : Gestion des messages et des utilisateurs
+- **Utilisateurs** : Participation aux discussions inter-serveurs
+
+## 🛠️ Configuration avancée
+
+### Personnalisation des messages
+
+```javascript
+// config/messages.js
+module.exports = {
+  embedColor: '#FF0000',
+  footerText: 'Powered by CommuSyncro',
+  // ...
+}
 ```
 
-2. Configurez le manifeste `.env` avec votre token :
-```env
-TOKEN=votre_token_secret_du_parti
-```
+### Webhooks et intégrations
 
-3. Lancez la révolution :
-```bash
-npm start # Le bot se lève pour servir le peuple !
-```
+Le bot supporte les webhooks Discord pour :
+- Notifications GitHub
+- Flux RSS
+- Intégrations personnalisées
 
-## ☭ Commandes du Parti ☭
+## 🤝 Contribution
 
-### Pour les Commissaires du Peuple (Administrateurs)
+Nous accueillons chaleureusement toutes les contributions ! Voici comment participer :
 
-- `/sync` : ⚒️ Unifie votre salon avec la cause commune
-- `/linkchannel` : 🔗 Établit une alliance avec un salon déjà unifié
-- `/createtunnel` : 🌍 Forge un passage permanent pour nos camarades
-- `/tunnels` : 🚩 Consulte la grande liste des passages de l'Union
+1. 🍴 Forkez le projet
+2. 🌿 Créez votre branche (`git checkout -b feature/AmeliorationIncroyable`)
+3. 💾 Committez vos changements (`git commit -m 'Ajout: Fonctionnalité incroyable'`)
+4. 📤 Pushez vers la branche (`git push origin feature/AmeliorationIncroyable`)
+5. 🔄 Ouvrez une Pull Request
 
-## 🛠️ Permissions Requises 🛠️
+## 💬 Support
 
-- Le Bot doit avoir les pleins pouvoirs (permissions d'administrateur) pour servir efficacement la cause
-- Seuls les Commissaires du Peuple peuvent utiliser les commandes d'unification
-- Le Bot nécessite l'intention "applications.commands" dans le portail des développeurs Discord
+- [Serveur Discord officiel](https://discord.gg/your-invite)
+- [Documentation complète](https://docs.commusyncro.com)
+- [FAQ](https://github.com/AnARCHIS12/commusyncro/wiki/FAQ)
 
-## 🚩 Caractéristiques de l'Union 🚩
+### Signalement de bugs
 
-- **Unification Totale** : Synchronisation parfaite des messages entre tous les serveurs alliés
-- **Passages Permanents** : Création de tunnels révolutionnaires entre les serveurs
-- **Sécurité du Parti** : Seuls les commissaires peuvent établir de nouvelles connexions
-- **Interface Glorieuse** : Messages enrichis aux couleurs de la révolution
+Utilisez le [système d'issues](https://github.com/AnARCHIS12/commusyncro/issues) de GitHub en suivant le template fourni.
 
-## ☭ Exemples d'Utilisation ☭
+## 📜 Licence
 
-```
-Serveur "Quartier Général" :
-1. /sync dans #annonces-officielles
-   → Le salon rejoint la grande cause !
-
-Serveur "Avant-Garde" :
-2. /linkchannel dans #communications
-   → L'alliance est forgée !
-
-Résultat :
-✓ Les messages sont partagés instantanément entre les salons
-✓ L'information circule librement pour tous les camarades !
-```
-
-## 🌍 Contribution à la Cause 🌍
-
-Camarades développeurs, unissez-vous ! Vos contributions à la cause sont les bienvenues. Ensemble, nous pouvons rendre cette technologie encore plus puissante pour le peuple !
-
-1. Forkez le dépôt
-2. Créez votre branche de fonctionnalités (`git checkout -b feature/AmeliorationRevolutionnaire`)
-3. Committez vos changements (`git commit -m 'Ajout d'une fonctionnalité pour le peuple'`)
-4. Poussez vers la branche (`git push origin feature/AmeliorationRevolutionnaire`)
-5. Ouvrez une Pull Request pour le bien de tous !
-
-## ☭ Support du Parti ☭
-
-En cas de problème technique, n'hésitez pas à :
-- Ouvrir une issue sur le dépôt
-- Contacter le Bureau Politique (maintainers)
-- Rejoindre le Soviet des développeurs (serveur Discord)
-
-## 🚩 Licence Populaire 🚩
-
-Ce projet est distribué sous la licence MIT - Pour le peuple, par le peuple !
+CommuSyncro est distribué sous la licence MIT. Voir le fichier `LICENSE` pour plus d'informations.
 
 ---
 
-*"Prolétaires de tous les serveurs, unissez-vous !"*
+<div align="center">
+
+**[⭐ Star le projet](https://github.com/AnARCHIS12/commusyncro)** •
+**[🐛 Signaler un bug](https://github.com/AnARCHIS12/commusyncro/issues)** •
+**[💡 Suggérer une fonctionnalité](https://github.com/AnARCHIS12/commusyncro/issues)**
+
+Fait avec ❤️ par la communauté CommuSyncro
+
+</div>
