@@ -1,11 +1,20 @@
 {
-  "name": "discord-sync-bot",
+  "name": "commusyncro",
   "version": "1.0.0",
-  "description": "Bot Discord pour synchroniser des salons entre serveurs",
+  "description": "Un bot Discord pour synchroniser les messages entre plusieurs serveurs",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": [
+    "discord",
+    "bot",
+    "sync",
+    "communication"
+  ],
+  "author": "CommuSyncro",
+  "license": "MIT",
   "dependencies": {
     "discord.js": "^14.14.1",
     "dotenv": "^16.3.1"
