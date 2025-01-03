@@ -91,7 +91,7 @@ client.on('interactionCreate', async interaction => {
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
             return interaction.reply({ 
                 content: `${POING} Seuls les commissaires du peuple peuvent utiliser cette commande, camarade.`,
-                ephemeral: true 
+                flags: ['Ephemeral']
             });
         }
 
@@ -120,7 +120,7 @@ client.on('interactionCreate', async interaction => {
             console.error('Erreur lors de la synchronisation:', error);
             await interaction.reply({ 
                 content: `${POING} Une erreur est survenue lors de l'unification.`,
-                ephemeral: true 
+                flags: ['Ephemeral']
             });
         }
     }
@@ -129,7 +129,7 @@ client.on('interactionCreate', async interaction => {
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
             return interaction.reply({ 
                 content: `${POING} Seuls les commissaires du peuple peuvent utiliser cette commande, camarade.`,
-                ephemeral: true 
+                flags: ['Ephemeral']
             });
         }
 
@@ -150,7 +150,7 @@ client.on('interactionCreate', async interaction => {
             console.error('Erreur lors de la liaison:', error);
             await interaction.reply({ 
                 content: `${POING} Une erreur est survenue lors de la liaison.`,
-                ephemeral: true 
+                flags: ['Ephemeral']
             });
         }
     }
@@ -159,7 +159,7 @@ client.on('interactionCreate', async interaction => {
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
             return interaction.reply({ 
                 content: `${POING} Seuls les commissaires du peuple peuvent utiliser cette commande, camarade.`,
-                ephemeral: true 
+                flags: ['Ephemeral']
             });
         }
 
@@ -183,7 +183,7 @@ client.on('interactionCreate', async interaction => {
             console.error('Erreur lors de la désynchronisation:', error);
             await interaction.reply({ 
                 content: `${POING} Une erreur est survenue lors de la désynchronisation.`,
-                ephemeral: true 
+                flags: ['Ephemeral']
             });
         }
     }
@@ -192,7 +192,7 @@ client.on('interactionCreate', async interaction => {
         if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
             return interaction.reply({ 
                 content: `${POING} Seuls les commissaires du peuple peuvent créer des passages, camarade.`,
-                ephemeral: true 
+                flags: ['Ephemeral']
             });
         }
 
@@ -237,7 +237,7 @@ client.on('interactionCreate', async interaction => {
                 .setDescription('Une erreur est survenue lors de la création du passage révolutionnaire.')
                 .setTimestamp();
 
-            await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+            await interaction.reply({ embeds: [errorEmbed], flags: ['Ephemeral'] });
         }
     }
 
@@ -246,7 +246,7 @@ client.on('interactionCreate', async interaction => {
         if (!serverTunnelMap || serverTunnelMap.size === 0) {
             return interaction.reply({ 
                 content: `${POING} Aucun passage n'a encore été établi pour nos camarades.`,
-                ephemeral: true 
+                flags: ['Ephemeral']
             });
         }
 
@@ -268,7 +268,7 @@ client.on('interactionCreate', async interaction => {
             });
         }
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: ['Ephemeral'] });
     }
 });
 
