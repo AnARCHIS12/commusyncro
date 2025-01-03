@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Logo CommuSyncro](https://i.imgur.com/placeholder.png)
+<img src="assets/logo.svg" alt="Logo CommuSyncro" width="200" height="200"/>
 
 [![Discord](https://img.shields.io/discord/YOUR_DISCORD_ID?color=7289DA&logo=discord&logoColor=white)](https://discord.gg/your-invite)
 [![GitHub license](https://img.shields.io/github/license/AnARCHIS12/commusyncro)](https://github.com/AnARCHIS12/commusyncro/blob/main/LICENSE)
