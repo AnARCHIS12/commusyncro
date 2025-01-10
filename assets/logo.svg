@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Fond circulaire -->
+    <circle cx="256" cy="256" r="240" fill="#7289DA"/>
+    
+    <!-- Cercle intérieur -->
+    <circle cx="256" cy="256" r="200" fill="#2C2F33"/>
+    
+    <!-- Symboles de synchronisation -->
+    <g transform="translate(256 256)">
+        <!-- Flèches circulaires -->
+        <path d="M-80,-80 A113.137,113.137 0 1,1 80,-80" 
+              stroke="#FF0000" 
+              stroke-width="24" 
+              stroke-linecap="round" 
+              fill="none"/>
+        <path d="M80,80 A113.137,113.137 0 1,1 -80,80" 
+              stroke="#FF0000" 
+              stroke-width="24" 
+              stroke-linecap="round" 
+              fill="none"/>
+        
+        <!-- Points de connexion -->
+        <circle cx="-80" cy="-80" r="20" fill="#FFFFFF"/>
+        <circle cx="80" cy="-80" r="20" fill="#FFFFFF"/>
+        <circle cx="-80" cy="80" r="20" fill="#FFFFFF"/>
+        <circle cx="80" cy="80" r="20" fill="#FFFFFF"/>
+    </g>
+    
+    <!-- Marteau et faucille -->
+    <g transform="translate(256 256)">
+        <!-- Cercle central -->
+        <circle cx="0" cy="0" r="45" fill="#FF0000"/>
+        
+        <!-- Marteau -->
+        <g transform="rotate(-45)">
+            <rect x="-5" y="-35" width="10" height="40" fill="#FFFFFF"/>
+            <rect x="-15" y="-35" width="30" height="15" fill="#FFFFFF"/>
+        </g>
+        
+        <!-- Faucille -->
+        <path d="M-10,-10 A30,30 0 0,1 25,15" 
+              stroke="#FFFFFF" 
+              stroke-width="10" 
+              stroke-linecap="round" 
+              fill="none"/>
+        <rect x="15" y="5" width="10" height="25" 
+              transform="rotate(45)" 
+              fill="#FFFFFF"/>
+    </g>
+</svg>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CommuSyncro - Documentation</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+</head>
+<body>
+    <nav class="nav-bar">
+        <ul class="nav-links">
+            <li><a href="#accueil" class="active"><i class="fas fa-home"></i> Accueil</a></li>
+            <li><a href="#installation"><i class="fas fa-download"></i> Installation</a></li>
+            <li><a href="#commandes"><i class="fas fa-terminal"></i> Commandes</a></li>
+            <li><a href="#configuration"><i class="fas fa-cogs"></i> Configuration</a></li>
+            <li><a href="#api"><i class="fas fa-code"></i> API</a></li>
+            <li><a href="https://discord.gg/EBMCgDZrGa" target="_blank"><i class="fab fa-discord"></i> Discord</a></li>
+        </ul>
+    </nav>
+
+    <main class="content">
+        <div class="search-bar">
+            <input type="text" placeholder="Rechercher dans la documentation..." id="search">
+        </div>
+
+        <section id="accueil" class="section active">
+            <div class="hero">
+                <img src="assets/logo.svg" alt="Logo CommuSyncro" class="hero-logo">
+                <h1>CommuSyncro</h1>
+                <p>L'Unificateur de Serveurs Discord</p>
+                <div class="cta-buttons">
+                    <a href="#installation" class="btn primary">Commencer</a>
+                    <a href="https://discord.com/oauth2/authorize?client_id=1324723736506662986&permissions=8&integration_type=0&scope=applications.commands+bot" class="btn secondary" target="_blank">Ajouter le Bot</a>
+                </div>
+            </div>
+
+            <div class="features">
+                <div class="feature-card">
+                    <i class="fas fa-sync"></i>
+                    <h3>Synchronisation</h3>
+                    <p>Synchronisez les messages entre plusieurs serveurs Discord</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>Sécurité</h3>
+                    <p>Contrôle total des permissions et de la modération</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-code"></i>
+                    <h3>API</h3>
+                    <p>API REST et WebSocket pour les intégrations</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="installation" class="section">
+            <h2>Installation</h2>
+            <div class="installation-steps">
+                <div class="step">
+                    <h3>1. Créez une Application Discord</h3>
+                    <p>Rendez-vous sur le <a href="https://discord.com/developers/applications" target="_blank">Discord Developer Portal</a></p>
+                    <div class="code-block">
+                        <pre><code>1. Cliquez sur "New Application"
+2. Nommez votre application "CommuSyncro"
+3. Allez dans l'onglet "Bot"
+4. Cliquez sur "Add Bot"</code></pre>
+                    </div>
+                </div>
+                <div class="step">
+                    <h3>2. Installez le Bot</h3>
+                    <div class="code-block">
+                        <pre><code>git clone https://github.com/AnARCHIS12/commusyncro.git
+cd commusyncro
+npm install</code></pre>
+                    </div>
+                </div>
+                <div class="step">
+                    <h3>3. Configurez le Bot</h3>
+                    <div class="code-block">
+                        <pre><code>cp .env.example .env
+# Éditez .env avec votre token</code></pre>
+                    </div>
+                </div>
+                <div class="step">
+                    <h3>4. Lancez le Bot</h3>
+                    <div class="code-block">
+                        <pre><code>npm start</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="commandes" class="section">
+            <h2>Commandes</h2>
+            <div class="features">
+                <div class="feature-card">
+                    <i class="fas fa-sync"></i>
+                    <h3>/sync</h3>
+                    <p>Synchronise un salon avec un groupe spécifique</p>
+                    <div class="code-block">
+                        <pre><code>/sync group:revolution</code></pre>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-door-open"></i>
+                    <h3>/createtunnel</h3>
+                    <p>Crée un portail vers un autre serveur</p>
+                    <div class="code-block">
+                        <pre><code>/createtunnel serverid:123 channelid:456</code></pre>
+                    </div>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-unlink"></i>
+                    <h3>/unsync</h3>
+                    <p>Retire le salon du réseau</p>
+                    <div class="code-block">
+                        <pre><code>/unsync</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="feature-highlight">
+                <h3>🌟 Portails Révolutionnaires</h3>
+                <p>Les portails permettent de créer des passages permanents entre serveurs :</p>
+                <ul>
+                    <li>Créez un portail avec <code>/createtunnel</code></li>
+                    <li>Les utilisateurs cliquent sur le bouton pour voyager</li>
+                    <li>Invitations uniques pour plus de sécurité</li>
+                    <li>Interface intuitive avec boutons</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="configuration" class="section">
+            <h2>Configuration</h2>
+            <div class="installation-steps">
+                <div class="step">
+                    <h3>Variables d'environnement</h3>
+                    <div class="code-block">
+                        <pre><code># Configuration Discord
+TOKEN=votre_token_bot
+CLIENT_ID=1324723736506662986
+GUILD_ID=id_serveur_test
+
+# Configuration Base de données
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=commusyncro</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="api" class="section">
+            <h2>API</h2>
+            <div class="installation-steps">
+                <div class="step">
+                    <h3>Authentication</h3>
+                    <div class="code-block">
+                        <pre><code>POST /api/auth/token
+
+{
+  "clientId": "1324723736506662986",
+  "clientSecret": "votre_client_secret"
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <a href="https://github.com/AnARCHIS12/commusyncro" target="_blank">
+            <i class="fab fa-github"></i> GitHub
+        </a>
+        <a href="https://discord.gg/EBMCgDZrGa" target="_blank">
+            <i class="fab fa-discord"></i> Discord
+        </a>
+    </footer>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
