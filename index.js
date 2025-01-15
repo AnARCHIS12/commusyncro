@@ -436,31 +436,13 @@ async function getTenorGifUrl(url) {
     }
 }
 
-// Cache pour les webhooks
-const webhookCache = new Map();
-
-// Obtenir ou créer un webhook pour un canal
-async function getWebhookForChannel(channel) {
-    // Vérifier le cache
-    if (webhookCache.has(channel.id)) {
-        return webhookCache.get(channel.id);
-    }
-
+// Fonction pour créer un nouveau webhook pour chaque message
+async function createWebhookForMessage(channel) {
     try {
-        // Chercher un webhook existant
-        let webhook = await channel.fetchWebhooks()
-            .then(hooks => hooks.find(hook => hook.owner.id === client.user.id));
-        
-        // Créer un nouveau webhook si nécessaire
-        if (!webhook) {
-            webhook = await channel.createWebhook({
-                name: 'CommuSyncro',
-                avatar: client.user.displayAvatarURL()
-            });
-        }
-
-        // Mettre en cache
-        webhookCache.set(channel.id, webhook);
+        const webhook = await channel.createWebhook({
+            name: 'CommuSyncro-' + Date.now(),
+            avatar: client.user.displayAvatarURL()
+        });
         return webhook;
     } catch (error) {
         console.error(`Erreur lors de la création du webhook pour ${channel.id}:`, error);
@@ -468,37 +450,73 @@ async function getWebhookForChannel(channel) {
     }
 }
 
-// Fonction pour envoyer un message avec retry
-async function sendWebhookMessage(webhook, options, maxRetries = 3) {
-    for (let i = 0; i < maxRetries; i++) {
-        try {
-            await webhook.send(options);
-            return true;
-        } catch (error) {
-            console.error(`Tentative ${i + 1}/${maxRetries} échouée:`, error);
-            if (i === maxRetries - 1) {
-                throw error;
+// Fonction pour découper un message long
+function splitLongMessage(content, maxLength = 1900) {
+    const parts = [];
+    let currentPart = '';
+    
+    const lines = content.split('\n');
+    for (const line of lines) {
+        if (currentPart.length + line.length + 1 > maxLength) {
+            if (currentPart) {
+                parts.push(currentPart);
+                currentPart = '';
             }
-            // Attendre avant de réessayer (1s, 2s, 4s)
-            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+            // Si une seule ligne est trop longue, la découper
+            if (line.length > maxLength) {
+                let remainingLine = line;
+                while (remainingLine.length > 0) {
+                    parts.push(remainingLine.slice(0, maxLength));
+                    remainingLine = remainingLine.slice(maxLength);
+                }
+            } else {
+                currentPart = line;
+            }
+        } else {
+            if (currentPart) currentPart += '\n';
+            currentPart += line;
         }
     }
-    return false;
+    if (currentPart) {
+        parts.push(currentPart);
+    }
+    return parts;
+}
+
+// Fonction pour décider si on utilise un embed
+function shouldUseEmbed(content, hasGif) {
+    // Si c'est un GIF, pas d'embed et pas de signature
+    if (hasGif) return false;
+    return content.length > 500 || content.includes('\n');
+}
+
+// Fonction pour créer un embed
+function createMessageEmbed(content, guild, serverLink, isLastPart = true) {
+    const embed = {
+        author: {
+            name: isLastPart ? `☭ ${guild.name} ☭` : '(Suite...)',
+            url: serverLink,
+            icon_url: guild.iconURL()
+        },
+        description: content,
+        color: parseInt(ROUGE_COMMUNISTE.replace('#', ''), 16),
+        footer: {
+            text: isLastPart ? 'Message synchronisé' : '(Suite...)',
+            icon_url: guild.iconURL()
+        }
+    };
+
+    return embed;
 }
 
 // Synchronisation des messages
 client.on('messageCreate', async (message) => {
     try {
-        // Ignorer les messages du bot
         if (message.author.bot) return;
 
-        // Récupérer le groupe du canal
         const groupId = await getChannelGroup(message.channel.id);
-        if (!groupId) return; // Le canal n'est pas synchronisé
+        if (!groupId) return;
 
-        console.log(`Message reçu dans le canal ${message.channel.id} (groupe ${groupId})`);
-
-        // Récupérer tous les canaux du groupe
         const syncedChannels = await getSyncedChannels();
         const channelsInGroup = syncedChannels.get(groupId);
         
@@ -507,133 +525,147 @@ client.on('messageCreate', async (message) => {
             return;
         }
 
-        console.log(`Canaux dans le groupe: ${Array.from(channelsInGroup).join(', ')}`);
+        // Nettoyer le message de toutes les signatures de serveur existantes
+        let cleanContent = message.content;
+        const serverSignaturePattern = /☭ [^☭]+ ☭/g;
+        cleanContent = cleanContent.replace(serverSignaturePattern, '').trim();
 
-        // Préparer les options de base du webhook
-        const webhookOptions = {
-            username: message.member.displayName,
-            avatarURL: message.author.displayAvatarURL()
-        };
+        // Vérifier si le message contient un GIF
+        const hasGif = cleanContent.includes('tenor.com') || cleanContent.includes('giphy.com');
 
-        // Si c'est une image, la télécharger une seule fois
-        let imageBuffer = null;
-        if (message.attachments.size > 0) {
-            const attachment = message.attachments.first();
-            console.log(`Téléchargement de ${attachment.url}`);
+        // Récupérer et sauvegarder les pièces jointes avant la suppression
+        const attachments = [];
+        for (const [id, attachment] of message.attachments) {
             try {
-                const response = await axios({
-                    method: 'get',
-                    url: attachment.url,
-                    responseType: 'arraybuffer',
-                    timeout: 10000,
-                    maxContentLength: 8 * 1024 * 1024
+                const response = await fetch(attachment.url);
+                const buffer = await response.arrayBuffer();
+                attachments.push({
+                    name: attachment.name,
+                    attachment: Buffer.from(buffer),
+                    description: attachment.description
                 });
-                imageBuffer = Buffer.from(response.data);
-                console.log('Image téléchargée avec succès');
             } catch (error) {
-                console.error('Erreur lors du téléchargement de l\'image:', error);
-                return;
+                console.error('Erreur lors de la récupération de la pièce jointe:', error);
             }
         }
 
-        // Envoyer à tous les canaux
-        for (const channelId of channelsInGroup) {
+        // Créer le lien vers le serveur
+        const serverLink = `https://discord.com/channels/${message.guild.id}/${message.channel.id}`;
+        const useEmbed = shouldUseEmbed(cleanContent, hasGif);
+        const signatureWithLink = `☭ [${message.guild.name}](${serverLink}) ☭`;
+
+        // Découper le message si nécessaire
+        const messageParts = useEmbed ? splitLongMessage(cleanContent, 4000) : [cleanContent];
+
+        // Envoyer le message dans le canal d'origine
+        const sourceWebhook = await createWebhookForMessage(message.channel);
+        if (sourceWebhook) {
             try {
-                console.log(`Tentative d'envoi vers le canal ${channelId}`);
-                const channel = await client.channels.fetch(channelId);
-                if (!channel) {
-                    console.log(`Canal ${channelId} non trouvé`);
-                    continue;
+                // Premier message avec pièces jointes
+                const firstMessageOptions = {
+                    username: message.member.displayName,
+                    avatarURL: message.author.displayAvatarURL(),
+                    allowedMentions: { parse: ['users', 'roles'] }
+                };
+
+                if (attachments.length > 0) {
+                    firstMessageOptions.files = attachments;
                 }
 
-                const webhook = await getWebhookForChannel(channel);
-                if (!webhook) {
-                    console.log(`Impossible de créer un webhook pour le canal ${channelId}`);
-                    continue;
+                if (useEmbed) {
+                    firstMessageOptions.embeds = [createMessageEmbed(messageParts[0], message.guild, serverLink, messageParts.length === 1)];
+                } else {
+                    firstMessageOptions.content = messageParts[0];
                 }
 
-                // Message avec image
-                if (imageBuffer) {
-                    let retries = 3;
-                    while (retries > 0) {
-                        try {
-                            const attachmentBuilder = new AttachmentBuilder(imageBuffer, { 
-                                name: message.attachments.first().name 
-                            });
+                await sourceWebhook.send(firstMessageOptions);
 
-                            await webhook.send({
-                                ...webhookOptions,
-                                files: [attachmentBuilder],
-                                content: message.content || ''
-                            });
-                            console.log(`Message avec image envoyé avec succès au canal ${channelId}`);
-                            break;
-                        } catch (error) {
-                            console.error(`Erreur lors de l'envoi de l'image (tentative ${4-retries}/3):`, error);
-                            retries--;
-                            if (retries === 0) {
-                                console.error('Toutes les tentatives ont échoué pour ce canal');
-                            } else {
-                                await new Promise(resolve => setTimeout(resolve, 2000));
+                // Envoyer le reste des parties s'il y en a
+                for (let i = 1; i < messageParts.length; i++) {
+                    const isLastPart = i === messageParts.length - 1;
+                    const messageOptions = {
+                        username: message.member.displayName,
+                        avatarURL: message.author.displayAvatarURL(),
+                        allowedMentions: { parse: ['users', 'roles'] }
+                    };
+
+                    if (useEmbed) {
+                        messageOptions.embeds = [createMessageEmbed(messageParts[i], message.guild, serverLink, isLastPart)];
+                    } else {
+                        messageOptions.content = messageParts[i];
+                    }
+
+                    await sourceWebhook.send(messageOptions);
+                }
+
+                // Envoyer aux autres canaux
+                for (const channelId of channelsInGroup) {
+                    try {
+                        if (channelId === message.channel.id) continue;
+
+                        const channel = await client.channels.fetch(channelId);
+                        if (!channel) continue;
+
+                        const webhook = await createWebhookForMessage(channel);
+                        if (webhook) {
+                            try {
+                                // Premier message avec pièces jointes
+                                const firstMessageOptions = {
+                                    username: message.member.displayName,
+                                    avatarURL: message.author.displayAvatarURL(),
+                                    allowedMentions: { parse: ['users', 'roles'] }
+                                };
+
+                                if (attachments.length > 0) {
+                                    firstMessageOptions.files = attachments;
+                                }
+
+                                if (useEmbed) {
+                                    firstMessageOptions.embeds = [createMessageEmbed(messageParts[0], message.guild, serverLink, messageParts.length === 1)];
+                                } else {
+                                    // Pour les GIFs, pas de signature
+                                    firstMessageOptions.content = hasGif ? messageParts[0] : `${messageParts[0]} ${signatureWithLink}`;
+                                }
+
+                                await webhook.send(firstMessageOptions);
+
+                                // Reste des parties
+                                for (let i = 1; i < messageParts.length; i++) {
+                                    const isLastPart = i === messageParts.length - 1;
+                                    const messageOptions = {
+                                        username: message.member.displayName,
+                                        avatarURL: message.author.displayAvatarURL(),
+                                        allowedMentions: { parse: ['users', 'roles'] }
+                                    };
+
+                                    if (useEmbed) {
+                                        messageOptions.embeds = [createMessageEmbed(messageParts[i], message.guild, serverLink, isLastPart)];
+                                    } else {
+                                        // Pour les GIFs, pas de signature même à la fin
+                                        messageOptions.content = hasGif ? messageParts[i] : (isLastPart ? `${messageParts[i]} ${signatureWithLink}` : messageParts[i]);
+                                    }
+
+                                    await webhook.send(messageOptions);
+                                }
+                            } finally {
+                                await webhook.delete().catch(console.error);
                             }
                         }
+                    } catch (error) {
+                        console.error(`Erreur lors de l'envoi vers ${channelId}:`, error);
                     }
                 }
-                // GIF Tenor
-                else if (message.content && message.content.includes('tenor.com')) {
-                    await webhook.send({
-                        ...webhookOptions,
-                        content: message.content
-                    });
-                    console.log(`GIF Tenor envoyé avec succès au canal ${channelId}`);
-                }
-                // Message texte normal
-                else {
-                    await webhook.send({
-                        ...webhookOptions,
-                        embeds: [{
-                            color: 0xFF0000, // Rouge communiste
-                            author: {
-                                name: `☭ ${message.member.displayName}`,
-                                icon_url: message.author.displayAvatarURL()
-                            },
-                            description: `${message.content}`,
-                            thumbnail: {
-                                url: message.guild.iconURL()
-                            },
-                            fields: [
-                                {
-                                    name: '📢 Canal',
-                                    value: `${message.channel}`,
-                                    inline: true
-                                },
-                                {
-                                    name: '🏰 Serveur',
-                                    value: message.guild.name,
-                                    inline: true
-                                }
-                            ],
-                            footer: {
-                                text: `Envoyé depuis ${message.guild.name} • Vive la révolution !`,
-                                icon_url: message.guild.iconURL()
-                            },
-                            timestamp: new Date()
-                        }]
-                    });
-                    console.log(`Message texte envoyé avec succès au canal ${channelId}`);
-                }
-            } catch (error) {
-                console.error(`Erreur lors de l'envoi au canal ${channelId}:`, error);
+            } finally {
+                await sourceWebhook.delete().catch(console.error);
             }
         }
 
-        // Supprimer le message original seulement après avoir envoyé à tous les canaux
+        // Supprimer le message original seulement après avoir envoyé tous les nouveaux messages
         try {
             await message.delete();
         } catch (error) {
             console.error('Erreur lors de la suppression du message:', error);
         }
-
     } catch (error) {
         console.error('Erreur générale lors de la synchronisation:', error);
     }
@@ -709,13 +741,11 @@ async function cleanInvalidChannels(client) {
                 if (!channel) {
                     console.log(`Canal introuvable, nettoyage: ${channelId}`);
                     await removeSyncedChannel(channelId);
-                    webhookCache.delete(channelId);
                 }
             } catch (error) {
                 if (error.code === 10003) { // Unknown Channel
                     console.log(`Canal invalide, nettoyage: ${channelId}`);
                     await removeSyncedChannel(channelId);
-                    webhookCache.delete(channelId);
                 } else {
                     console.error(`Erreur lors du nettoyage du canal ${channelId}:`, error);
                 }
